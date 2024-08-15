@@ -117,6 +117,17 @@ declare namespace Demo {
         createdAt: number;
     }
 
+    type Bill = {
+        id: string;
+        name: string;
+        description: string;
+        amount: number;
+        cuota: number;
+        type: 'scheduled' | 'occasional';
+        deadline?: Date;
+        [key: string]: string | string[] | number | boolean | undefined | Date;
+    };
+
     //ProductService
     type Product = {
         id?: string;
