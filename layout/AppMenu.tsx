@@ -77,11 +77,6 @@ const AppMenu = () => {
                     ]
                 },
                 {
-                    label: 'Payments',
-                    icon: 'pi pi-fw pi-money-bill',
-                    to: '/pages/payments'
-                },
-                {
                     label: 'Not Found',
                     icon: 'pi pi-fw pi-exclamation-circle',
                     to: '/pages/notfound'

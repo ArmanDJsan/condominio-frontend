@@ -125,6 +125,8 @@ declare namespace Demo {
         cuota: number;
         type: 'scheduled' | 'occasional';
         deadline?: Date;
+        created_at?: Date;
+        updated_at?: Date;
         [key: string]: string | string[] | number | boolean | undefined | Date;
     };
 

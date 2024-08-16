@@ -16,6 +16,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Calendar } from 'primereact/calendar';
 import { Demo } from '@/types';
 import axios from '@/lib/axios';
+import useSWR from 'swr';
 
 /* @todo Used 'as any' for types here. Will fix in next version due to onSelectionChange event type issue. */
 const Crud = () => {
@@ -28,58 +29,25 @@ const Crud = () => {
         cuota: 0,
         type: 'scheduled',
         deadline: undefined,
+        created_at: undefined,
+        updated_at: undefined,
     };
+    const closedDialog = { create: false, update: false, deleteBill: false, deleteBills: false };
 
-    const billsData = [
-        {
-            "id": 1,
-            "name": "Autem natus doloremque magni et.",
-            "description": "Voluptatibus at omnis unde tenetur maiores voluptatem. Quia molestiae qui illo totam veniam nisi repellendus. In aut adipisci perferendis dicta temporibus repudiandae. Commodi et nesciunt totam neque consequatur.",
-            "type": "scheduled",
-            "amount": 5680,
-            "cuota": 284,
-            "deadline": new Date("2024-08-15T03:32:11.965176Z")
-        },
-        {
-            "id": 2,
-            "name": "Ad voluptate perspiciatis maxime tempore et assumenda iusto ipsum.",
-            "description": "Similique nihil dolorum ut enim dolor. Consequatur tenetur fuga blanditiis quaerat nisi rem ratione eos. Quaerat et nisi voluptas excepturi incidunt.",
-            "type": "scheduled",
-            "amount": 5680,
-            "cuota": 284,
-            "deadline": new Date("2024-08-15T03:32:11.965331Z")
-        },
-        {
-            "id": 3,
-            "name": "Est aut ut perferendis vitae architecto.",
-            "description": "Dolore est eligendi aut dolores. Quia nihil quae doloremque aperiam saepe.",
-            "type": "scheduled",
-            "amount": 5680,
-            "cuota": 284,
-            "deadline": new Date("2024-08-15T03:32:11.965415Z")
-        },
-        {
-            "id": 6,
-            "name": "dwadawdawda",
-            "description": "dwadwadawdawdawd",
-            "type": "occasional",
-            "amount": 44440.22,
-            "cuota": 444,
-            "deadline":  new Date("2024-08-15T04:53:18.686276Z")
-        }
-    ];
+    const [billDialog, setBillDialog] = useState(closedDialog);
 
-    const [bills, setBills] = useState(billsData);
-    const [billDialog, setBillDialog] = useState(false);
-    const [deleteBillDialog, setDeleteBillDialog] = useState(false);
-    const [deleteBillsDialog, setDeleteBillsDialog] = useState(false);
     const [bill, setBill] = useState<Demo.Bill>(emptyBill);
     const [selectedBills, setSelectedBills] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [globalFilter, setGlobalFilter] = useState('');
-    const toast = useRef<Toast>(null);
+
+    const toast = useRef<any>(null);
     const dt = useRef<DataTable<any>>(null);
 
+
+    const fetcher = (url: string) => axios.get(url).then(res => res.data).then(data => data.map((bill: any) => ({ ...bill, deadline: new Date(bill.deadline), created_at: new Date(bill.created_at), updated_at: new Date(bill.updated_at) })));
+    const { data: bills = [], mutate, isLoading } = useSWR('/api/bills', fetcher);
+    /*     const bills = data ? data.map((bill: any) => ({ ...bill, deadline: new Date(bill.deadline) })) : []; */
     const formatCurrency = (value: number) => {
         return value.toLocaleString('en-US', {
             style: 'currency',
@@ -90,20 +58,20 @@ const Crud = () => {
     const openNew = () => {
         setBill(emptyBill);
         setSubmitted(false);
-        setBillDialog(true);
+        setBillDialog({ ...closedDialog, create: true });
     };
 
     const hideDialog = () => {
         setSubmitted(false);
-        setBillDialog(false);
+        setBillDialog(closedDialog);
     };
 
     const hideDeleteBillDialog = () => {
-        setDeleteBillDialog(false);
+        setBillDialog(closedDialog);
     };
 
     const hideDeleteBillsDialog = () => {
-        setDeleteBillsDialog(false);
+        setBillDialog(closedDialog);
     };
 
 
@@ -125,7 +93,6 @@ const Crud = () => {
                     detail: 'Bill Created',
                     life: 3000,
                 });
-                console.log(response.data);
                 const { data } = response;
                 const newBill = {
                     id: data.id,
@@ -136,9 +103,9 @@ const Crud = () => {
                     type: data.type,
                     deadline: new Date(data.deadline),
                 };
-                setBills([...bills, newBill]);
+                mutate([...bills, newBill]);
                 setBill(emptyBill);
-                setBillDialog(false);
+                setBillDialog({ ...closedDialog });
             } else {
                 toast.current?.show({
                     severity: 'error',
@@ -157,60 +124,87 @@ const Crud = () => {
             });
         }
     };
-    const saveBill = () => {
-        setSubmitted(true);
 
-        if (bill.name.trim()) {
-            let _bills = [...(bills as any)];
-            let _bill = { ...bill };
-            if (bill.id) {
-                const index = findIndexById(bill.id);
-
-                _bills[index] = _bill;
+    const updateBill = (bill: Demo.Bill) => {
+        const formattedBill = {
+            ...bill,
+            deadline: bill.deadline?.toISOString(),
+            created_at: bill.created_at?.toISOString(),
+            updated_at: bill.updated_at?.toISOString(),
+        };
+        console.log('updateBill');
+        console.log(formattedBill);
+        axios.put(`/api/bills/${bill.id}`, formattedBill)
+            .then(response => {
+                if (response.status === 200) {
+                    toast.current?.show({
+                        severity: 'success',
+                        summary: 'Successful',
+                        detail: 'Bill Updated',
+                        life: 3000,
+                    });
+                    mutate('/api/bills'); // Refetch the bills after update
+                } else {
+                    toast.current?.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Failed to update bill',
+                        life: 3000,
+                    });
+                }
+            })
+            .catch(error => {
                 toast.current?.show({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Bill Updated',
-                    life: 3000
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Failed to update bill',
+                    life: 3000,
                 });
-            } else {
-                _bill.id = createId();
-                _bills.push(_bill);
+                console.error('Error updating bill:', error);
+            });
+    };
+    const deleteBill = (id: string) => {
+        axios.post('/api/bills/cancel', { id })
+            .then(response => {
+                if (response.status === 200) {
+                    toast.current?.show({
+                        severity: 'success',
+                        summary: 'Successful',
+                        detail: 'Bill Deleted',
+                        life: 3000,
+                    });
+                    const { data: deletedBill } = response;
+                    mutate(bills.filter((bill: Demo.Bill) => bill.id !== deletedBill.id));
+                    setBillDialog({ ...closedDialog });
+                    setBill(emptyBill);
+                } else {
+                    toast.current?.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Failed to delete bill',
+                        life: 3000,
+                    });
+                }
+            })
+            .catch(error => {
                 toast.current?.show({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Bill Created',
-                    life: 3000
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Failed to delete bill',
+                    life: 3000,
                 });
-            }
-
-            setBills(_bills as any);
-            setBillDialog(false);
-            setBill(emptyBill);
-        }
+                console.error('Error deleting bill:', error);
+            });
     };
 
     const editBill = (bill: Demo.Bill) => {
         setBill({ ...bill });
-        setBillDialog(true);
+        setBillDialog({ ...closedDialog, update: true });
     };
 
     const confirmDeleteBill = (bill: Demo.Bill) => {
         setBill(bill);
-        setDeleteBillDialog(true);
-    };
-
-    const deleteBill = () => {
-        let _bills = (bills as any)?.filter((val: any) => val.id !== bill.id);
-        setBills(_bills);
-        setDeleteBillDialog(false);
-        setBill(emptyBill);
-        toast.current?.show({
-            severity: 'success',
-            summary: 'Successful',
-            detail: 'Bill Deleted',
-            life: 3000
-        });
+        setBillDialog({ ...closedDialog, deleteBill: true });
     };
 
     const findIndexById = (id: string) => {
@@ -239,13 +233,13 @@ const Crud = () => {
     };
 
     const confirmDeleteSelected = () => {
-        setDeleteBillsDialog(true);
+        setBillDialog({ ...closedDialog, deleteBills: true });
     };
 
     const deleteSelectedBills = () => {
         let _bills = (bills as any)?.filter((val: any) => !(selectedBills as any)?.includes(val));
-        setBills(_bills);
-        setDeleteBillsDialog(false);
+        mutate(_bills);
+        setBillDialog({ ...closedDialog });
         setSelectedBills(null);
         toast.current?.show({
             severity: 'success',
@@ -328,6 +322,33 @@ const Crud = () => {
             </>
         );
     };
+    const updatedAtBodyTemplate = (rowData: Demo.Bill) => {
+        const date = rowData.updated_at as Date;
+
+        return (
+            <>
+                <span className="p-column-title">Deadline</span>
+                {date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                })}
+            </>
+        );
+    };
+    const createdAtBodyTemplate = (rowData: Demo.Bill) => {
+        const date = rowData.created_at as Date;
+        return (
+            <>
+                <span className="p-column-title">Deadline</span>
+                {date.toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                })}
+            </>
+        );
+    };
 
     const amountBodyTemplate = (rowData: Demo.Bill) => {
         return (
@@ -375,16 +396,21 @@ const Crud = () => {
         </div>
     );
 
+    const CreateOrUpdateFunction = () => {
+        console.log(bill);
+        return billDialog.create ? createBill() : updateBill(bill);
+    }
+
     const billDialogFooter = (
         <>
             <Button label="Cancel" icon="pi pi-times" text onClick={hideDialog} />
-            <Button label="Save" icon="pi pi-check" text onClick={createBill} />
+            <Button label="Save" icon="pi pi-check" text onClick={CreateOrUpdateFunction} />
         </>
     );
     const deleteBillDialogFooter = (
         <>
             <Button label="No" icon="pi pi-times" text onClick={hideDeleteBillDialog} />
-            <Button label="Yes" icon="pi pi-check" text onClick={deleteBill} />
+            <Button label="Yes" icon="pi pi-check" text onClick={(rowData) => deleteBill(bill.id)} />
         </>
     );
     const deleteBillsDialogFooter = (
@@ -416,6 +442,7 @@ const Crud = () => {
                         globalFilter={globalFilter}
                         emptyMessage="No bills found."
                         header={header}
+                        loading={isLoading}
 
                     >
                         <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
@@ -428,11 +455,12 @@ const Crud = () => {
                         <Column field="type" header="Type" sortable body={typeBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
 
                         <Column field="deadline" header="Date" sortable body={dateBodyTemplate} style={{ minWidth: '15re' }}></Column>
-
+                        <Column field="created_at" header="Start" sortable body={createdAtBodyTemplate} style={{ minWidth: '15re' }}></Column>
+                        <Column field="updated_at" header="Updated" sortable body={updatedAtBodyTemplate} style={{ minWidth: '15re' }}></Column>
                         <Column body={actionBodyTemplate} headerStyle={{ minWidth: '10rem' }}></Column>
                     </DataTable>
 
-                    <Dialog visible={billDialog} style={{ width: '450px' }} header="Bill Details" modal className="p-fluid" footer={billDialogFooter} onHide={hideDialog}>
+                    <Dialog visible={billDialog.create || billDialog.update} style={{ width: '450px' }} header="Bill Details" modal className="p-fluid" footer={billDialogFooter} onHide={hideDialog}>
                         <div className="field">
                             <label htmlFor="name">Name</label>
                             <InputText
@@ -482,7 +510,7 @@ const Crud = () => {
                         </div>
                     </Dialog>
 
-                    <Dialog visible={deleteBillDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteBillDialogFooter} onHide={hideDeleteBillDialog}>
+                    <Dialog visible={billDialog.deleteBill} style={{ width: '450px' }} header="Confirm" modal footer={deleteBillDialogFooter} onHide={hideDeleteBillDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                             {bill && (
@@ -493,7 +521,7 @@ const Crud = () => {
                         </div>
                     </Dialog>
 
-                    <Dialog visible={deleteBillsDialog} style={{ width: '450px' }} header="Confirm" modal footer={deleteBillsDialogFooter} onHide={hideDeleteBillsDialog}>
+                    <Dialog visible={billDialog.deleteBills} style={{ width: '450px' }} header="Confirm" modal footer={deleteBillsDialogFooter} onHide={hideDeleteBillsDialog}>
                         <div className="flex align-items-center justify-content-center">
                             <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
                             {bill && <span>Are you sure you want to delete the selected bills?</span>}
