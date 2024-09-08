@@ -11,7 +11,7 @@ const fetcher = (url) =>
             if (error.response.status !== 409) throw error;
         });
 
-export const useAuth = ({ middleware='guest', redirectIfAuthenticated='' } = {}) => {
+export const useAuth = ({ middleware, redirectIfAuthenticated} = {}) => {
     const router = useRouter();
     const params = useParams();
 
@@ -24,11 +24,11 @@ export const useAuth = ({ middleware='guest', redirectIfAuthenticated='' } = {})
 
         setErrors([]);
         axios
-        .post('/register', props)
+        .post('/api/register', props)
         .then(() => mutate())
         .catch((error) => {
+            console.log(error);
             if (error.response.status !== 422) throw error;
-
             setErrors(error.response.data.errors);
         });
     };
@@ -102,8 +102,8 @@ export const useAuth = ({ middleware='guest', redirectIfAuthenticated='' } = {})
     };
 
     useEffect(() => {
-        if (middleware === 'guest' && redirectIfAuthenticated && user) {router.push(redirectIfAuthenticated), console.log(redirectIfAuthenticated), console.log("push")};
-        if (window.location.pathname === '/verify-email' && user?.email_verified_at) router.push(redirectIfAuthenticated);
+        if (middleware === 'guest' && redirectIfAuthenticated && user) {router.push(redirectIfAuthenticated)};
+      /*   if (window.location.pathname === '/auth/login' && user) router.push(redirectIfAuthenticated); */
         if (middleware === 'auth' && error) logout();
     }, [user, error]);
 

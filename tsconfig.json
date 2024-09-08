@@ -34,7 +34,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "app/(main)/condominios/[id]/cuentas/page.tsx2"  ],
   "exclude": [
     "node_modules"
   ]

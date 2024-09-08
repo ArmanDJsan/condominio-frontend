@@ -124,11 +124,33 @@ declare namespace Demo {
         amount: number;
         cuota: number;
         type: 'scheduled' | 'occasional';
-        deadline?: Date;
-        created_at?: Date;
-        updated_at?: Date;
+        deadline?: Date | undefined;
+        created_at?: Date | undefined;
+        updated_at?: Date | undefined;
+        payment?: Payment[] | undefined;
         [key: string]: string | string[] | number | boolean | undefined | Date;
     };
+
+    type Department = {
+        number: number;
+        floor: number;
+        description: string;
+        aliquot: number;
+    };
+
+    //payment
+    type Payment = {
+        id: number | null;
+        owner: string;
+        number: number | null;
+        floor: number  | null;
+        amount: number  | null;
+        date: Date  | undefined;
+        status: 'Paid' | 'Pending' | 'Rejected' | 'Canceled';
+        method: 'Credit' | 'Debit' |'PagoMovil' | 'Cash' | 'Transfer';
+        [key: string]: string | string[] | number | boolean | undefined | Date  | null;
+    };
+
 
     //ProductService
     type Product = {
@@ -156,12 +178,12 @@ declare namespace Demo {
         status?: Status;
     };
 
-    type Payment = {
+  /*   type Payment = {
         name: string;
         amount: number;
         paid: boolean;
         date: string;
-    };
+    }; */
 
     //CustomerService
     type Customer = {
