@@ -21,7 +21,7 @@ const LoginPage = () => {
     const { layoutConfig } = useContext(LayoutContext);
     const toast = useRef<Toast>(null);
 
-    const { login } = useAuth({redirectIfAuthenticated: '/', middleware: 'guest'});
+    const { login } = useAuth({ redirectIfAuthenticated: '/', middleware: 'guest' });
     const router = useRouter();
     const containerClassName = classNames('surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden', { 'p-input-filled': layoutConfig.inputStyle === 'filled' });
     const handleLogin = () => {
@@ -46,7 +46,6 @@ const LoginPage = () => {
         <div className={containerClassName}>
             <Toast ref={toast} />
             <div className="flex flex-column align-items-center justify-content-center">
-                <img src={`/layout/images/logo-${layoutConfig.colorScheme === 'light' ? 'dark' : 'white'}.svg`} alt="Sakai logo" className="mb-5 w-6rem flex-shrink-0" />
                 <div
                     style={{
                         borderRadius: '56px',
@@ -56,7 +55,7 @@ const LoginPage = () => {
                 >
                     <div className="w-full surface-card py-8 px-5 sm:px-8" style={{ borderRadius: '53px' }}>
                         <div className="text-center mb-5">
-                            <img src="/demo/images/login/avatar.png" alt="Image" height="50" className="mb-3" />
+                            <span className='pi pi-building text-6xl mb-3'></span>
                             <div className="text-900 text-3xl font-medium mb-3">Bienvenido!</div>
                             <span className="text-600 font-medium">Inicia sesión para continuar</span>
                         </div>
@@ -71,19 +70,15 @@ const LoginPage = () => {
                             <label htmlFor="password1" className="block text-900 font-medium text-xl mb-2">
                                 Clave
                             </label>
-                            <Password inputId="password1" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Clave"  promptLabel="Ingrese su Clave" weakLabel="Seguridad baja" mediumLabel="Seguridad media" strongLabel="Seguridad alta" toggleMask className="w-full mb-5" inputClassName="w-full p-3 md:w-30rem"></Password>
+                            <Password inputId="password1" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Clave" promptLabel="Ingrese su Clave" weakLabel="Seguridad baja" mediumLabel="Seguridad media" strongLabel="Seguridad alta" toggleMask className="w-full mb-5" inputClassName="w-full p-3 md:w-30rem"></Password>
                             <InputError messages={errors?.password} className="mt-2" />
 
 
                             <div className="flex align-items-center justify-content-between mb-5 gap-5">
-                               {/*  <div className="flex align-items-center">
-                                    <Checkbox inputId="rememberme1" checked={checked} onChange={(e) => setChecked(e.checked ?? false)} className="mr-2"></Checkbox>
-                                    <label htmlFor="rememberme1">Recordarme</label>
-                                </div> */}
                                 <a href={"/auth/register"} className="font-medium no-underline ml-2 text-right cursor-pointer" style={{ color: 'var(--primary-color)' }}>
                                     No posee una Cuenta?
                                 </a>
-                                <a  className="font-medium no-underline ml-2 text-right cursor-pointer" style={{ color: 'var(--primary-color)' }}>
+                                <a className="font-medium no-underline ml-2 text-right cursor-pointer" style={{ color: 'var(--primary-color)' }}>
                                     Olvido su Clave?
                                 </a>
                             </div>
