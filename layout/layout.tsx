@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client';
-
+import { Suspense } from 'react'
 import { useRouter } from 'next/navigation';
 import { useEventListener, useMountEffect, useUnmountEffect } from 'primereact/hooks';
 import React, { useContext, useEffect, useRef } from 'react';
@@ -14,7 +14,9 @@ import { PrimeReactContext } from 'primereact/api';
 import { ChildContainerProps, LayoutState, AppTopbarRef } from '@/types';
 import { usePathname, useSearchParams } from 'next/navigation';
 
-const Layout = ({ children }: ChildContainerProps) => {
+
+
+const LayoutContent = ({ children }: ChildContainerProps) => {
     const { layoutConfig, layoutState, setLayoutState } = useContext(LayoutContext);
     const { setRipple } = useContext(PrimeReactContext);
     const topbarRef = useRef<AppTopbarRef>(null);
@@ -140,4 +142,14 @@ const Layout = ({ children }: ChildContainerProps) => {
     );
 };
 
+function Layout ({ children }: ChildContainerProps) {
+    return (
+      // You could have a loading skeleton as the `fallback` too
+      <Suspense>
+        <LayoutContent >{children}
+            
+        </LayoutContent>
+      </Suspense>
+    )
+  }
 export default Layout;

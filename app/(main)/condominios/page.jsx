@@ -1,4 +1,5 @@
 'use client';
+import { Suspense } from 'react';
 import { useState } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -151,4 +152,16 @@ const Condominio = () => {
 
 };
 
-export default Condominio;
+
+
+const CondominioPage = () => {
+    // existing code...
+
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <Condominio />
+        </Suspense>
+    );
+};
+
+export default CondominioPage;
