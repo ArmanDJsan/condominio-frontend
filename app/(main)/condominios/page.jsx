@@ -1,5 +1,4 @@
 'use client';
-import { Suspense } from 'react';
 import { useState } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
@@ -19,7 +18,6 @@ const fetcher = (url) =>
 const Condominio = () => {
 
     const { data: condominiums, error, isLoading } = useSWR('/api/condominiums', fetcher, { revalidate: false });
-    console.log(condominiums);
     const clearCondominium = {
         name: '',
         address: '',
@@ -107,7 +105,7 @@ const Condominio = () => {
         </>
     )
 
-    if (condominiums.length) return (
+    if (condominiums?.length) return (
         <>
             <h1 className="text-2xl">Condominios</h1>
             <div className='grid grid-cols-4 gap-4'>
@@ -152,16 +150,4 @@ const Condominio = () => {
 
 };
 
-
-
-const CondominioPage = () => {
-    // existing code...
-
-    return (
-        <Suspense fallback={<div>Loading...</div>}>
-            <Condominio />
-        </Suspense>
-    );
-};
-
-export default CondominioPage;
+export default Condominio;
